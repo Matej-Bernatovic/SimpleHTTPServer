@@ -1,32 +1,38 @@
 import BaseHTTPServer
+import os 
 
 class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    
-    Page= """
-<html>
-<head>
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
-</head>
-<body class="container">
-<h1>Hello, web!</h1>
-<div class="container"> This is test server ! </div>
-</body>
-</html>
-"""
     #obradi get request
-    def do_GET(self):        
-        page = self.create_page()
-        self.send_page(page)
-
-    def create_page(self):
-        page = self.Page
-        return page
+    def do_GET(self):
+        #os.getcwd -> get_current_working_directory
+        #self.path -> putanja do filea kojeg browser trazi        
+        print os.getcwd() + self.path
+        try:
+            if self.path == "/":
+                full_path = os.getcwd() + "/index.html"
+            else:
+                full_path=os.getcwd() + self.path
+                
+            if not os.path.exists(full_path):
+                raise Exception("%s not found"%self.path)
+            elif os.path.isfile(full_path):
+                self.handle_file(full_path)
+        except Exception as msg:
+            #self.handle_error(msg)
+            print msg
     def send_page(self, page):
         self.send_response(200)
         self.send_header("Content-Type","text/html")       
         self.send_header("Content-Length", str(len(page))) 
         self.end_headers()
         self.wfile.write(page)
+    def handle_file(self,path):
+        try:
+            with open(path , "rb") as reader:
+                content = reader.read()
+            self.send_page(content)
+        except IOError as msg:
+            msg= "Nije pronadena stranica !"
 
 if __name__ == '__main__':
     print "Starting web server..."
